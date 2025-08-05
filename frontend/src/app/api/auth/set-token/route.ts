@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 interface TokenRequest {
     token: string;
 }
 
 export async function POST(req: NextRequest) {
-    const body: TokenRequest = await req.json();
+    const body = await req.json() as TokenRequest;
     const { token } = body;
 
     if (!token) {
