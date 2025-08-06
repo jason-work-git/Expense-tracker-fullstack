@@ -28,7 +28,7 @@ export default function RegisterForm() {
             const data = await res.json() as ApiResponse;
             if (res.ok) {
                 setMessage("Registration successful! Redirecting to login...");
-                setTimeout(() => router.push("/auth/login"), 2000);
+                setTimeout(() => router.push("/login"), 2000);
             } else {
                 setMessage(data.message || "Registration failed");
             }

@@ -231,10 +231,10 @@
     @apply max-w-[1440px] mx-auto px-3 md:px-0;
 }
 
-.currentDateStyleDatePicker .rmdp-container {
+ .rmdp-container {
     @apply w-full
 }
 
-.currentDateStyleDatePicker .rmdp-container .rmdp-input {
-    @apply h-10;
+ .rmdp-container .rmdp-input {
+    @apply h-10 !border-border;
 }

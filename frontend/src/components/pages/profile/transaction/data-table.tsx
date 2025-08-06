@@ -6,31 +6,44 @@ import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import {
   Dialog,
-  DialogContent,
+  DialogContent, DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ArrowDownIcon, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { type ExpenseType } from "@/components/pages/profile/transaction/type";
+import { type CategoryType, type ExpenseType } from "@/components/pages/profile/transaction/type";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const TransactionDataTable = ({ expenses }: { expenses: ExpenseType[] }) => {
+const TransactionDataTable = ({ expenses, categories }: { expenses: ExpenseType[], categories: CategoryType[] }) => {
   const [open, setOpen] = useState(false);
   const [currentPeriod, setCurrentPeriod] = useState<string>("daily");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [formData, setFormData] = useState({
-    id: "",
     name: "",
     value: "",
-    date: "", //format(new Date(), "yyyy-MM-dd", {locale: faIR}),
+    category: "",
   });
-  const [errors, setErrors] = useState({ name: "", value: "", date: "" });
+  const [errors, setErrors] = useState({ name: "", value: "", category: "" });
+
+  const handleChangeData = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: "" }));
+  };
 
   const handleAddOrEditExpense = () => {
     let hasError = false;
-    const newErrors = { name: "", value: "", date: "" };
-
+    const newErrors = { name: "", value: "", category: "" };
+console.log(formData)
     if (!formData.name.trim()) {
       newErrors.name = "نام الزامی است";
       hasError = true;
@@ -39,70 +52,15 @@ const TransactionDataTable = ({ expenses }: { expenses: ExpenseType[] }) => {
       newErrors.value = "قیمت باید یک عدد معتبر باشد";
       hasError = true;
     }
-    if (!formData.date) {
-      newErrors.date = "تاریخ الزامی است";
+    if (!formData.category.trim()) {
+      newErrors.category = "یک دسته بندی را انتخاب کنید";
       hasError = true;
     }
-
     setErrors(newErrors);
 
     if (!hasError) {
-      /* const date = parse(formData.date, "yyyy-MM-dd", new Date(), {locale: faIR});
-       const expense = {
-         id: isEditing ? formData.id : generateId(),
-         name: formData.name,
-         value: formData.value,
-         date: formData.date,
-       };
+      console.log(formData);
 
-       setExpenses((prev) => {
-         const dailyKey = getPeriodKey(date, "daily");
-         const weeklyKey = getPeriodKey(date, "weekly");
-         const monthlyKey = getPeriodKey(date, "monthly");
-
-         if (isEditing) {
-           // Update existing expense
-           const updateExpenses = (periodExpenses: Expense[]) =>
-             periodExpenses.map((item) =>
-               item.id === expense.id ? expense : item
-             );
-
-           return {
-             daily: {
-               ...prev.daily,
-               [dailyKey]: updateExpenses(prev.daily[dailyKey] || []),
-             },
-             weekly: {
-               ...prev.weekly,
-               [weeklyKey]: updateExpenses(prev.weekly[weeklyKey] || []),
-             },
-             monthly: {
-               ...prev.monthly,
-               [monthlyKey]: updateExpenses(prev.monthly[monthlyKey] || []),
-             },
-           };
-         } else {
-           // Add new expense
-           return {
-             daily: {
-               ...prev.daily,
-               [dailyKey]: [...(prev.daily[dailyKey] || []), expense],
-             },
-             weekly: {
-               ...prev.weekly,
-               [weeklyKey]: [...(prev.weekly[weeklyKey] || []), expense],
-             },
-             monthly: {
-               ...prev.monthly,
-               [monthlyKey]: [...(prev.monthly[monthlyKey] || []), expense],
-             },
-           };
-         }
-       });
-
-       setFormData({id: "", name: "", value: "", date: format(new Date(), "yyyy-MM-dd", {locale: faIR})});
-       setIsEditing(false);
-       setOpen(false);*/
     }
   };
 
@@ -112,12 +70,11 @@ const TransactionDataTable = ({ expenses }: { expenses: ExpenseType[] }) => {
       if (!open) {
         // setIsEditing(false);
         setFormData({
-          id: "",
           name: "",
           value: "",
-          date: "",//format(new Date(), "yyyy-MM-dd", {locale: faIR}),
+          category: "",
         });
-        setErrors({ name: "", value: "", date: "" });
+        setErrors({ name: "", value: "", category: "" });
       }
     }}>
       <DialogTrigger asChild>
@@ -128,58 +85,61 @@ const TransactionDataTable = ({ expenses }: { expenses: ExpenseType[] }) => {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>افزودن هزینه جدید</DialogTitle>
+          <DialogTitle>
+            <p className="mb-3">افزودن هزینه جدید</p>
+
+          </DialogTitle>
         </DialogHeader>
+        <DialogDescription>تاریخ: ({new Date(selectedDate).toLocaleDateString("fa-IR")})</DialogDescription>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label htmlFor="name">نام</label>
+            <label className="text-[12px]" htmlFor="category">دسته بندی</label>
+            <Select onValueChange={(e) => handleChangeData("category", e)}>
+              <SelectTrigger id="category" className={`w-full ${errors.category ? "border-red-500" : ""}`}>
+                <SelectValue placeholder="دسته بندی" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>دسته بندی</SelectLabel>
+                  {categories.map((c, i) => (
+                    <SelectItem value={c._id} key={i}>{c.name}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
+          </div>
+          <div className="grid gap-2">
+            <label className="text-[12px]" htmlFor="name">نام</label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => handleChangeData("name", e.target.value)}
               className={errors.name ? "border-red-500" : ""}
             />
             {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
           <div className="grid gap-2">
-            <label htmlFor="value">قیمت</label>
+            <label className="text-[12px]" htmlFor="value">قیمت</label>
             <Input
               id="value"
               type="number"
               value={formData.value}
-              onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+              onChange={(e) => handleChangeData("value", e.target.value)}
               className={errors.value ? "border-red-500" : ""}
             />
             {errors.value && <p className="text-red-500 text-sm">{errors.value}</p>}
           </div>
-          <div className="grid gap-2">
-            <label htmlFor="date">تاریخ</label>
-            <DatePicker
-              value={formData.date}
-              // date
-              onChange={() =>
-                setFormData({
-                  ...formData,
-                  date: "",//date ? format(new Date(date.toDate()), "yyyy-MM-dd", {locale: faIR}) : "",
-                })
-              }
-              calendar={persian}
-              locale={persian_fa}
-              calendarPosition="bottom-right"
-              style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "8px",
-                border: "1px solid #e5e7eb",
-              }}
-            />
-            {errors.date && <p className="text-red-500 text-sm">{errors.date}</p>}
-          </div>
+
           <Button onClick={handleAddOrEditExpense}>ثبت</Button>
         </div>
       </DialogContent>
     </Dialog>
   );
+  let sum_ = 0;
+  expenses.map((item) => (sum_ += item.amount));
+
+
   return (
     <div className="bg-background container flex-grow flex flex-col">
       <div className="flex items-center gap-x-3 my-3 w-full">
@@ -200,7 +160,7 @@ const TransactionDataTable = ({ expenses }: { expenses: ExpenseType[] }) => {
           })
         }
       </div>
-      <div className="my-3 flex items-center justify-between">
+      <div className=" flex items-center justify-between">
         <div>
           <span>تاریخ: </span>
           <DatePicker
@@ -210,56 +170,40 @@ const TransactionDataTable = ({ expenses }: { expenses: ExpenseType[] }) => {
             onChange={(date) => date && setSelectedDate(new Date(date.toDate()))}
             calendar={persian}
             locale={persian_fa}
-            calendarPosition="bottom-right"
-            style={{
-              width: "100%",
-              padding: "8px",
-              borderRadius: "8px",
-              border: "1px solid gray",
-              height: "48px",
-            }}
           />
         </div>
-        <AddModalDialog />
+        {AddModalDialog()}
       </div>
-      <div className="my-3  border rounded-lg overflow-y-auto max-h-[500px] scrollBarStyle">
+      <div className="my-3  border rounded-lg overflow-y-auto max-h-[400px] scrollBarStyle">
         {
-
-          //   new Array(100).fill(
-          //     {
-          //       "_id": "6891134b656459145c16df56",
-          //       "userId": 1,
-          //       "amount": 50.99,
-          //       "description": "Lunch at cafe",
-          //       "date": "2025-08-05T00:00:00.000Z",
-          //       "categoryId": {
-          //         "_id": "6891131cbbc44c76d4b1e163",
-          //         "name": "سیگار"
-          //       },
-          //       "createdAt": "2025-08-04T20:08:43.749Z",
-          //       "updatedAt": "2025-08-04T20:08:43.749Z",
-          //       "id": 1,
-          //       "__v": 0
-          //     }
-          //   )
-          expenses.map((item, i) => (
+          expenses.length !== 0 ? expenses.map((item, i) => (
             <div key={i} className="flex flex-col even:bg-accent p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p>
+                    {i}
                     {item.description}
                   </p>
                   <span>{new Date(item.date).toLocaleString("fa-IR")}</span>
                 </div>
-                <div className=" font-bold flex items-center ">
+                <div className="font-bold flex items-center ">
                   <span className="h-5 ">{item.amount}</span>
                   <ArrowDownIcon className="size-5" />
                 </div>
               </div>
 
             </div>
-          ))}
-
+          )) : <div className="px-3 py-6 text-center">
+            هنوز مقداری ثبت نشده است
+          </div>}
+        <div className="sticky bottom-0 inset-x-0 bg-primary border-t p-3 flex items-center justify-between">
+          <span>مجموع</span>
+          <span className="text-[18px] font-bold">
+            {sum_}
+            {" "}
+            <span className="text-[12px]">تومان</span>
+          </span>
+        </div>
       </div>
     </div>
   );
